@@ -16,7 +16,7 @@ TEMPLATE_PATH = ROOT_DIR / "assets" / "UGEL - Plantilla de asistencia.xlsx"
 
 ANEXO3_START_ROW = 13
 ANEXO4_START_ROW = 12
-TEACHER_INFO_COLUMNS = (1, 2, 3, 5, 6, 7, 8, 9)
+READ_ONLY_COLUMNS = range(1, 10)
 
 
 def generate_school_workbook(version_id: int, colegio_codigo: str) -> bytes:
@@ -80,7 +80,7 @@ def _fill_sheet(sheet, docentes, version, start_row: int) -> None:
         }
         for column, value in values.items():
             _set_cell_value(sheet, index, column, value)
-        _lock_teacher_info_cells(sheet, index)
+    _lock_read_only_columns(sheet)
     _protect_sheet(sheet)
 
 
@@ -136,23 +136,27 @@ def _unlock_sheet_cells(sheet) -> None:
             cell.protection = copy(unlocked)
 
 
-def _lock_teacher_info_cells(sheet, row: int) -> None:
+def _lock_read_only_columns(sheet) -> None:
     locked = Protection(locked=True)
-    for column in TEACHER_INFO_COLUMNS:
-        coordinate = sheet.cell(row=row, column=column).coordinate
-        for merged_range in sheet.merged_cells.ranges:
-            if coordinate in merged_range:
-                sheet.cell(
-                    row=merged_range.min_row,
-                    column=merged_range.min_col,
-                ).protection = copy(locked)
-                break
-        else:
-            sheet.cell(row=row, column=column).protection = copy(locked)
+    for row in range(1, sheet.max_row + 1):
+        for column in READ_ONLY_COLUMNS:
+            _set_cell_protection(sheet, row, column, locked)
+
+
+def _set_cell_protection(sheet, row: int, column: int, protection: Protection) -> None:
+    coordinate = sheet.cell(row=row, column=column).coordinate
+    for merged_range in sheet.merged_cells.ranges:
+        if coordinate in merged_range:
+            sheet.cell(
+                row=merged_range.min_row,
+                column=merged_range.min_col,
+            ).protection = copy(protection)
+            return
+    sheet.cell(row=row, column=column).protection = copy(protection)
 
 
 def _protect_sheet(sheet) -> None:
-    sheet.protection.sheet = True
+    sheet.protection.enable()
     sheet.protection.selectLockedCells = False
     sheet.protection.selectUnlockedCells = True
 
