@@ -1,0 +1,1 @@
+"""UGEL attendance template generator."""
