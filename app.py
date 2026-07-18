@@ -20,7 +20,8 @@ st.set_page_config(page_title="UGEL Asistencia", layout="wide")
 
 def main() -> None:
     db.init_db()
-    st.title("Generador de plantillas de asistencia")
+    st.title("Asist UGEL LUYA")
+    st.subheader("Generador de plantillas de asistencia")
 
     tab_upload, tab_changes, tab_history = st.tabs(
         ["Carga Nexus", "Colegios con cambios", "Historial"]
